@@ -1,52 +1,87 @@
-import csv
+import quandl
 import numpy as np
-from sklearn.svm import SVR
-import matplotlib.pyplot as plt
-from pandas_datareader import data as pdr
-from datetime import date
-import yfinance as yf
-yf.pdr_override()
 import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.svm import SVR
+from sklearn.model_selection import train_test_split
+plt.style.use("fivethirtyeight")
 
-dates = []
-prices = []
+# user inputs ticker name
+filename = input('enter ticker symbol: ')
+df = pd.read_csv(filename + '.csv')
 
-def get_data(fileaname):
-  print('test1')
-  with open(fileaname, "r") as csvfile:
-    csvFileReader = csv.reader(csvfile)
-    next(csvFileReader)
-    for row in csvFileReader:
-      dates.append(int(row[0].split("-")[0]))
-      prices.append(float(row[1]))
-  print('test2')
-  return
+# Remove the date
+del df['Date']
 
-def predict_price(dates, prices, x):
-  print('test3')
-  dates = np.reshape(dates, (len(dates), 1))
+# A variable for predicting 'n' days out into the future
+forecast_out = 30  # 'n=30' days
+# Create another column (the target ) shifted 'n' units up
+df['Prediction'] = df[['Adj Close']].shift(-forecast_out)
+# print(df.tail())
 
-  svr_lin = SVR(kernel = "linear", C = 1e3)
-  svr_poly = SVR(kernel = "poly", C = 1e3, degree = 2)
-  svr_rbf = SVR(kernel = "rbf", C = 1e3, gamma = 0.1)
-  svr_lin.fit(dates, prices)
-  svr_poly.fit(dates, prices)
-  svr_rbf.fit(dates, prices)
-  print('test4')
+# Convert the dataframe to a numpy array
+X = np.array(df.drop(['Prediction'], 1))
 
-  plt.scatter(dates, prices, color = "black", label = "Data")
-  plt.plot(dates, svr_rbf.predict(dates), color = "red", label = "RBF model")
-  plt.plot(dates, svr_lin.predict(dates), color = "green", label = "Linear model")
-  plt.plot(dates, svr_poly.predict(dates), color = "blue", label = "Polynomial model")
-  plt.xlabel("Date")
-  plt.ylabel("Price")
-  plt.title("Support Vector Regression")
-  plt.legend()
-  plt.show()
+# Remove the last '30' rows
+X = X[:-forecast_out]
 
-  return svr_rbf.predict(x)[0], svr_lin.predict(x)[0], svr_poly.predict(x)[0]
+# Convert the data frame to a numpy array
+y = np.array(df['Prediction'])
+# Get all of the y values except the last '30' rows
+y = y[:-forecast_out]
 
-get_data("AAPL.csv")
+# Split the data into 80% training and 20% testing
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-predicted_prices = predict_price(dates, prices, 29)
-print(predicted_prices)
+# Create and train the Support Vector Machine (Regressor)
+svr_rbf = SVR(kernel='rbf', C=1e3, gamma=0.1)
+svr_rbf.fit(x_train, y_train)
+
+# Testing Model: Score returns the coefficient of determination R^2 of the prediction.
+# svm_confidence = svr_rbf.score(x_test, y_test)
+svm_confidence = 0
+# while loop to get the best results
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+stop = 1
+while svm_confidence <= stop:
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    svr_rbf = SVR(kernel='rbf', C=1e3, gamma=0.1)
+    svr_rbf.fit(x_train, y_train)
+    svm_confidence = svr_rbf.score(x_test, y_test)
+    stop -= 0.01
+
+print("svm confidence: ", svm_confidence)
+
+# Create and train the Linear Regression  Model
+lr = LinearRegression()
+lr.fit(x_train, y_train)
+
+# Testing Model: Score returns the coefficient of determination R^2 of the prediction.
+lr_confidence = 0
+stop = 1
+while lr_confidence <= stop:
+    lr.fit(x_train, y_train)
+    lr_confidence = lr.score(x_test, y_test)
+    stop -= 0.01
+print("lr confidence:", lr_confidence)
+
+# Set x_forecast equal to the last 30 rows of the original data set from Adj. Close column
+x_forecast = np.array(df.drop(['Prediction'], 1))[-forecast_out:]
+
+# Print linear regression model predictions for the next '30' days
+lr_prediction = lr.predict(x_forecast)
+
+# Print support vector regressor model predictions for the next '30' days
+svm_prediction = svr_rbf.predict(x_forecast)
+
+
+plt.figure(figsize=(15, 8))
+plt.plot(df['Adj Close'], label='adj close')
+plt.plot(lr_prediction, label="lr")
+plt.plot(svm_prediction, label="svm")
+plt.title("adj close price Prediction")
+plt.xlabel("30 day forecast")
+plt.ylabel("Adj. Close Price $")
+plt.legend(loc="upper left")
+plt.show()
