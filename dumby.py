@@ -6,12 +6,13 @@ form = cgi.FieldStorage()
 # Get data from fields
 first_name = form.getvalue('first_name')
 last_name = form.getvalue('last_name')
-print "Content-type:text/html\r\n\r\n"
-print "<html>"
-print "<head>"
-print "<title>Hello - Second CGI Program</title>"
-print "</head>"
-print "<body>"
-print "<h2>Hello %s %s</h2>" % (first_name, last_name)
-print "</body>"
-print "</html>"
+text = '''
+<html>
+    <body>
+        <h1>Heading (first_name, last_name) </h1> 
+    </body>
+</html>
+'''
+file = open("pythonReturns.html","w")
+file.write(text)
+file.close()
