@@ -5,10 +5,13 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
-plt.style.use("fivethirtyeight")
+import seaborn as sns
+#plt.style.use("fivethirtyeight")
+sns.set_style("whitegrid")
 
 # user inputs ticker name
-filename = input('enter ticker symbol: ')
+# filename = input('enter ticker symbol: ')
+filename = 'AAPL'
 df = pd.read_csv(filename + '.csv')
 
 # Remove the date
@@ -40,18 +43,18 @@ svr_rbf.fit(x_train, y_train)
 
 # Testing Model: Score returns the coefficient of determination R^2 of the prediction.
 # svm_confidence = svr_rbf.score(x_test, y_test)
-svm_confidence = 0
+svr_confidence = 0
 # while loop to get the best results
 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 stop = 1
-while svm_confidence <= stop:
+while svr_confidence <= stop:
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     svr_rbf = SVR(kernel='rbf', C=1e3, gamma=0.1)
     svr_rbf.fit(x_train, y_train)
-    svm_confidence = svr_rbf.score(x_test, y_test)
+    svr_confidence = svr_rbf.score(x_test, y_test)
     stop -= 0.01
 
-print("svm confidence: ", svm_confidence)
+# print("svm confidence: ", svr_confidence)
 
 # Create and train the Linear Regression  Model
 lr = LinearRegression()
@@ -71,15 +74,21 @@ x_forecast = np.array(df.drop(['Prediction'], 1))[-forecast_out:]
 
 # Print linear regression model predictions for the next '30' days
 lr_prediction = lr.predict(x_forecast)
+old = df[['Adj Close']]
+for x in lr_prediction:
+    new_row = {'Open': 0, 'High': 0, 'Low': 0, 'Close': 0, 'Adj Close': x, 'Volume': 0}
+    df = df.append(new_row, ignore_index=True)
+# print(df.tail())
 
 # Print support vector regressor model predictions for the next '30' days
 svm_prediction = svr_rbf.predict(x_forecast)
 
-
+blue, = sns.color_palette("muted", 1)
 plt.figure(figsize=(15, 8))
-plt.plot(df['Adj Close'], label='adj close')
-plt.plot(lr_prediction, label="lr")
-plt.plot(svm_prediction, label="svm")
+plt.plot(df['Adj Close'], color='red', label='adj close')
+plt.plot(old['Adj Close'], color='k', label="past data")
+# plt.plot(lr_prediction, label="lr")
+# plt.plot(svm_prediction, label="svm")
 plt.title("adj close price Prediction")
 plt.xlabel("30 day forecast")
 plt.ylabel("Adj. Close Price $")
