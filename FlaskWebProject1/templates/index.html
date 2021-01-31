@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+
+
+<style>
+    h1 {
+        text-align: center;
+    }
+
+    p {
+        text-align: center;
+    }
+
+    div {
+        text-align: center;
+    }
+</style>
+<div class="header">
+    <h1>GME, AMC, NOK, BB, Find out whats next!!!!</h1>
+    <p>*This is not Financial Advice*</p>
+</div>
+
+<body>
+    <div id="buttonHolder">
+        <form action='/home' method='POST' id="stockname">
+            Stock Name: <input type="text" name="ticker" id="ticker"> <br />
+            <input type="submit" value="Submit" name="Submit" /><br />
+        </form>
+    </div>
+    <style>
+        #buttonHolder {
+            width: 250px;
+            margin: 0 auto;
+        }  
+        width:auto;
+        height:auto;
+    </style>
+    <img src={{url}} alt="Stonks" height="440" width="600" onerror="this.style.display='none'" />
+</body>
+
+
+
+
+
+{% endblock %}
