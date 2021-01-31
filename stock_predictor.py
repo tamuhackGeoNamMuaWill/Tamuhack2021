@@ -35,21 +35,9 @@ def filesDownload():
     def SaveData(df, filename):
         # df.to_csv('./data/' + filename + ".csv")
         dnew = df.iloc[200:]
-        dnew.to_csv(filename + '.csv')
+        dnew.to_csv('_ticker' + '.csv')
 
-    # def SMA(filename):
-    #     df = pd.read_csv(filename + ".csv")
-    #     df['SMA_200'] = df.iloc[:, 5].rolling(window=200).mean()
-    #     df['SMA_50'] = df.iloc[:, 5].rolling(window=50).mean()
-    #     dataname = filename + "_with_SMA"
-    #     files_SMA.append(filename)
-    #     SaveData(df, filename)
-
-    #for tik in ticker_list:
-        #getData(tik)
     getData(ticker_list)
-    # for i in files:
-    #     SMA(i)
 
 
 def userInput():
@@ -61,7 +49,7 @@ def userInput():
 
 def prediction(filename):
     # filename = input('enter ticker symbol: ')
-    df = pd.read_csv(filename + '.csv')
+    df = pd.read_csv('_ticker' + '.csv')
 
     # Remove the date
     del df['Date']
@@ -86,20 +74,6 @@ def prediction(filename):
     # Split the data into 80% training and 20% testing
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-    # Create and train the Support Vector Machine (Regressor)
-    svr_rbf = SVR(kernel='rbf', C=1e3, gamma=0.1)
-    svr_rbf.fit(x_train, y_train)
-    svr_confidence = 0
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-    stop = 1
-    # while loop to get the best results
-    while svr_confidence <= stop:
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-        svr_rbf = SVR(kernel='rbf', C=1e3, gamma=0.1)
-        svr_rbf.fit(x_train, y_train)
-        svr_confidence = svr_rbf.score(x_test, y_test)
-        stop -= 0.01
-
     # Create and train the Linear Regression  Model
     lr = LinearRegression()
     lr.fit(x_train, y_train)
@@ -121,8 +95,6 @@ def prediction(filename):
         new_row = {'Open': 0, 'High': 0, 'Low': 0, 'Close': 0, 'Adj Close': x, 'Volume': 0}
         df = df.append(new_row, ignore_index=True)
 
-    # svm_prediction = svr_rbf.predict(x_forecast)
-
     plt.rcParams.update({'font.size': 18})
     plt.figure(figsize=(15, 11))
     plt.xlim([len(df) - 100, len(df)-1])
@@ -131,13 +103,11 @@ def prediction(filename):
     plt.plot(old['Adj Close'], color='k', label="Past Data")
     plt.plot(df['SMA_200'], color='b', label='SMA 200')
     plt.plot(df['SMA_50'], color='g', label='SMA 50')
-    # plt.yticks(np.arange(int(df['Adj Close'].tail(100).min() * 1.1), int(df['Adj Close'].tail(100).max() * 1.1), step=(int(df['Adj Close'].tail(100).max() * 1.1))/10))
     plt.title("30 Day Prediction of " + filename)
     plt.xlabel("Days")
     plt.ylabel("Adj. Close Price $")
     plt.legend()
     plt.savefig("_graph")
-    # plt.show()
 
 
 userInput()
