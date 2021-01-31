@@ -35,7 +35,7 @@ def filesDownload():
     def SaveData(df, filename):
         # df.to_csv('./data/' + filename + ".csv")
         dnew = df.iloc[200:]
-        dnew.to_csv('_ticker' + '.csv')
+        dnew.to_csv(filename + '.csv')
 
     # def SMA(filename):
     #     df = pd.read_csv(filename + ".csv")
